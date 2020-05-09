@@ -8,7 +8,7 @@ const log = createLogger('services/createTodo');
 
 export const createTodo = (req: CreateTodoRequest, userId: string) => {
   const todoId = uuid();
-  log.info(`Creating todo item ${todoId}`);
+  log.debug(`Creating todo item ${todoId}`);
 
   const { name, dueDate } = req;
   const todo: TodoItem = {

@@ -1,11 +1,9 @@
 import 'source-map-support/register';
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda';
-import * as middy from 'middy';
-import { cors, httpSecurityHeaders } from 'middy/middlewares';
 
 import { getTodos } from '../../services';
-import { getUserId } from '../utils';
+import { getUserId, addMiddleware } from '../utils';
 import { createLogger } from '../../utils/logger';
 
 const log = createLogger('http/getTodos');
@@ -14,7 +12,7 @@ const getUserTodos: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent)
   log.info(`Received event`, { event });
   try {
     const items = (await getTodos(getUserId(event))) ?? [];
-    log.debug(`Returning items`, { items });
+    log.info(`Returning retrieved items`, { items });
     return {
       statusCode: 200,
       body: JSON.stringify({ items }),
@@ -29,4 +27,4 @@ const getUserTodos: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent)
   }
 };
 
-export const handler = middy(getUserTodos).use(cors()).use(httpSecurityHeaders());
+export const handler = addMiddleware(getUserTodos);

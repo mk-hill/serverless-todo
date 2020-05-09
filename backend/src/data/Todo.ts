@@ -1,6 +1,7 @@
 import { AWS } from '../aws';
 import { createLogger } from '../utils/logger';
 import { TodoItem } from '../models/TodoItem';
+import { UpdateTodoRequest } from '../requests/UpdateTodoRequest';
 
 const TableName = process.env.TODOS_TABLE;
 const IndexName = process.env.USER_INDEX;
@@ -11,7 +12,7 @@ const log = createLogger('data/Todo');
 const query = (params) => db.query({ TableName, ...params }).promise();
 
 async function getTodoById(id: string) {
-  log.info(`Getting todo item ${id}`);
+  log.debug(`Getting todo item ${id}`);
 
   const data = await query({
     KeyConditionExpression: 'todoId = :todoId',
@@ -29,7 +30,7 @@ async function getTodoById(id: string) {
 }
 
 async function getTodosByUserId(id: string) {
-  log.info(`Getting todos for user ${id}`);
+  log.debug(`Getting todos for user ${id}`);
 
   try {
     const data = await query({
@@ -49,13 +50,59 @@ async function getTodosByUserId(id: string) {
 }
 
 async function createTodo(todo: TodoItem) {
-  log.info(`Saving todo`, { todo });
+  log.debug(`Saving todo`, { todo });
   try {
     const result = await db.put({ TableName, Item: todo }).promise();
-    log.info(`Put completed`, { result });
+    log.info(`Put complete`, { result });
     return todo;
   } catch (error) {
     log.error('Unable to save todo', { error });
+    throw error;
+  }
+}
+
+async function updateTodo(todoId: string, userId: string, request: UpdateTodoRequest) {
+  log.debug(`Updating todo`, { request });
+  try {
+    const { name, dueDate, done } = request;
+    const result = await db
+      .update({
+        TableName,
+        Key: { todoId, userId },
+        UpdateExpression: 'set #name = :name, dueDate = :dueDate, done = :done',
+        ExpressionAttributeValues: {
+          ':name': name,
+          ':dueDate': dueDate,
+          ':done': done,
+        },
+        ExpressionAttributeNames: {
+          '#name': 'name',
+        },
+        ReturnValues: 'ALL_NEW',
+      })
+      .promise();
+    log.info('Update complete', { result });
+    return result.Attributes;
+  } catch (error) {
+    log.error('Unable to update todo', { error });
+    throw error;
+  }
+}
+
+async function deleteTodo(todoId: string, userId: string) {
+  log.debug(`Deleting todo`, { todo: { todoId, userId } });
+  try {
+    const result = await db
+      .delete({
+        TableName,
+        Key: { todoId, userId },
+        ReturnValues: 'ALL_OLD',
+      })
+      .promise();
+    log.info(`Delete complete`, { result });
+    return result;
+  } catch (error) {
+    log.error('Unable to delete todo', { error });
     throw error;
   }
 }
@@ -64,4 +111,6 @@ export const Todo = {
   getById: getTodoById,
   getByUser: getTodosByUserId,
   create: createTodo,
+  update: updateTodo,
+  delete: deleteTodo,
 };
