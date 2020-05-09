@@ -1,36 +1,31 @@
 import 'source-map-support/register';
-import { v4 as uuid } from 'uuid';
 
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda';
+import * as middy from 'middy';
+import { cors, httpSecurityHeaders } from 'middy/middlewares';
 
-import { CreateTodoRequest } from '../../requests/CreateTodoRequest';
-import { TodoItem } from '../../models/TodoItem';
-import { getUserId } from '..//utils';
-import { createTodo } from '../../aws';
+import { getUserId } from '../utils';
 import { createLogger } from '../../utils/logger';
+import { createTodo } from '../../services';
 
-const log = createLogger('createTodo');
+const log = createLogger('http/createTodo');
 
-export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  const item = await createItemInTable(event);
-  return {
-    statusCode: 201,
-    body: JSON.stringify({ item }),
-  };
+const createTodoItem: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  log.info(`Received event: ${JSON.stringify(event)}`, { event });
+  try {
+    const item = await createTodo(JSON.parse(event.body), getUserId(event));
+    return {
+      statusCode: 201,
+      body: JSON.stringify({ item }),
+    };
+  } catch (error) {
+    const message = 'Unable to create todo';
+    log.error(message, { error });
+    return {
+      statusCode: 500,
+      body: message,
+    };
+  }
 };
 
-const createItemInTable = (e: APIGatewayProxyEvent) => {
-  // const time = process.hrtime();
-  const { name, dueDate }: CreateTodoRequest = JSON.parse(e.body);
-
-  const todo: TodoItem = {
-    name,
-    dueDate,
-    todoId: uuid(),
-    userId: getUserId(e),
-    done: false,
-    createdAt: new Date().toISOString(),
-  };
-
-  return createTodo(todo);
-};
+export const handler = middy(createTodoItem).use(cors()).use(httpSecurityHeaders());
