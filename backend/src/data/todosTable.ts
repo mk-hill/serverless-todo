@@ -1,4 +1,4 @@
-import { AWS } from '../aws';
+import { DocumentClient } from '../aws';
 import { createLogger } from '../utils/logger';
 import { TodoItem } from '../models/TodoItem';
 import { UpdateTodoRequest } from '../requests/UpdateTodoRequest';
@@ -6,10 +6,11 @@ import { UpdateTodoRequest } from '../requests/UpdateTodoRequest';
 const TableName = process.env.TODOS_TABLE;
 const IndexName = process.env.USER_INDEX;
 
-const db = new AWS.DynamoDB.DocumentClient();
+const db = new DocumentClient();
 const log = createLogger('data/Todo');
 
 const query = (params) => db.query({ TableName, ...params }).promise();
+const update = (params) => db.update({ TableName, ...params }).promise();
 
 async function getTodoById(id: string) {
   log.debug(`Getting todo item ${id}`);
@@ -65,22 +66,42 @@ async function updateTodo(todoId: string, userId: string, request: UpdateTodoReq
   log.debug(`Updating todo`, { request });
   try {
     const { name, dueDate, done } = request;
-    const result = await db
-      .update({
-        TableName,
-        Key: { todoId, userId },
-        UpdateExpression: 'set #name = :name, dueDate = :dueDate, done = :done',
-        ExpressionAttributeValues: {
-          ':name': name,
-          ':dueDate': dueDate,
-          ':done': done,
-        },
-        ExpressionAttributeNames: {
-          '#name': 'name',
-        },
-        ReturnValues: 'ALL_NEW',
-      })
-      .promise();
+    const result = await update({
+      Key: { todoId, userId },
+      UpdateExpression: 'set #name = :name, dueDate = :dueDate, done = :done',
+      ExpressionAttributeValues: {
+        ':name': name,
+        ':dueDate': dueDate,
+        ':done': done,
+      },
+      ExpressionAttributeNames: {
+        '#name': 'name',
+      },
+      ReturnValues: 'ALL_NEW',
+    });
+    log.info('Update complete', { result });
+    return result.Attributes;
+  } catch (error) {
+    log.error('Unable to update todo', { error });
+    throw error;
+  }
+}
+
+async function updateAttachmentUrl(todoId: string, userId: string, attachmentUrl: string) {
+  log.debug(`Updating attachment url`, { item: { todoId, userId, attachmentUrl } });
+  try {
+    const result = await update({
+      Key: { todoId, userId },
+      UpdateExpression: 'set attachmentUrl = :attachmentUrl',
+      ExpressionAttributeValues: {
+        ':attachmentUrl': attachmentUrl,
+      },
+      ExpressionAttributeNames: {
+        '#name': 'name',
+      },
+      ReturnValues: 'UPDATED_NEW',
+    });
+
     log.info('Update complete', { result });
     return result.Attributes;
   } catch (error) {
@@ -107,10 +128,11 @@ async function deleteTodo(todoId: string, userId: string) {
   }
 }
 
-export const Todo = {
+export const todosTable = {
   getById: getTodoById,
   getByUser: getTodosByUserId,
   create: createTodo,
   update: updateTodo,
   delete: deleteTodo,
+  updateAttachmentUrl,
 };
