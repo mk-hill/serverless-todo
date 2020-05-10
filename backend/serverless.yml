@@ -23,7 +23,7 @@ provider:
     apiGateway: true
 
 package:
-  # individually: true
+  individually: true
   excludeDevDependencies: true
 
 functions:
