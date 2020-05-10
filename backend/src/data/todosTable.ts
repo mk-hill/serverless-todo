@@ -7,7 +7,7 @@ const TableName = process.env.TODOS_TABLE;
 const IndexName = process.env.USER_INDEX;
 
 const db = new DocumentClient();
-const log = createLogger('data/Todo');
+const log = createLogger('data/todosTable');
 
 const query = (params) => db.query({ TableName, ...params }).promise();
 const update = (params) => db.update({ TableName, ...params }).promise();
@@ -95,9 +95,6 @@ async function updateAttachmentUrl(todoId: string, userId: string, attachmentUrl
       UpdateExpression: 'set attachmentUrl = :attachmentUrl',
       ExpressionAttributeValues: {
         ':attachmentUrl': attachmentUrl,
-      },
-      ExpressionAttributeNames: {
-        '#name': 'name',
       },
       ReturnValues: 'UPDATED_NEW',
     });

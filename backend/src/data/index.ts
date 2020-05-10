@@ -1,7 +1,7 @@
 import { todosTable } from './todosTable';
-import { generateUploadUrl } from './attachments';
+import { generateAttachmentUrls } from './attachments';
 
 export const Todo = {
   ...todosTable,
-  generateAttachmentUploadUrl: generateUploadUrl,
+  generateAttachmentUrls,
 };

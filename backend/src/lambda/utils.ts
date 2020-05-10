@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyHandler } from 'aws-lambda';
 import * as middy from 'middy';
-import { cors, httpSecurityHeaders } from 'middy/middlewares';
+import { cors } from 'middy/middlewares';
 
 import { parseUserId } from '../auth/utils';
 

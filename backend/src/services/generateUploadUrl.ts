@@ -3,7 +3,9 @@ import { createLogger } from '../utils/logger';
 
 const log = createLogger('services/generateUploadUrl');
 
-export const generateUploadUrl = (todoId: string, userId: string) => {
+export const generateUploadUrl = async (todoId: string, userId: string) => {
   log.debug('Generating upload url', { item: { todoId, userId } });
-  return Todo.generateAttachmentUploadUrl(todoId, userId);
+  const { signedPutUrl, getUrl } = await Todo.generateAttachmentUrls(todoId, userId);
+  await Todo.updateAttachmentUrl(todoId, userId, getUrl);
+  return signedPutUrl;
 };

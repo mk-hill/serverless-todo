@@ -15,8 +15,8 @@ provider:
   environment:
     TODOS_TABLE: Todos-${self:provider.stage}
     USER_INDEX: UserCreatedIndex
-    AWS_REGION: us-east-1
     TODO_ITEM_ATTACHMENTS_BUCKET: todo-attachments-mkhill-${self:provider.stage}
+    BUCKET_AWS_REGION: us-east-1
 
   tracing:
     lambda: true
@@ -142,7 +142,6 @@ functions:
           - 'xray:PutTraceSegments'
         Resource: '*'
 
-  # TODO: Configure this function
   GenerateUploadUrl:
     handler: src/lambda/http/generateUploadUrl.handler
     events:
@@ -156,6 +155,18 @@ functions:
         Action:
           - s3:PutObject
         Resource: arn:aws:s3:::${self:provider.environment.TODO_ITEM_ATTACHMENTS_BUCKET}/*
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: 'Allow'
+        Action:
+          - 'xray:PutTelemetryRecords'
+        Resource: '*'
+      - Effect: 'Allow'
+        Action:
+          - 'xray:PutTraceSegments'
+        Resource: '*'
 
 resources:
   Resources:
