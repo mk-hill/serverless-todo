@@ -25,8 +25,10 @@ package:
   excludeDevDependencies: true
 
 functions:
-  # Auth:
-  #   handler: src/lambda/auth/auth0Authorizer.handler
+  Auth:
+    environment:
+      AUTH0_URL: ${env:SLS_TODO_AUTH0_URL}
+    handler: src/lambda/auth/auth0Authorizer.handler
 
   # TODO: Configure this function
   GetTodos:
@@ -35,6 +37,8 @@ functions:
       - http:
           method: get
           path: todos
+          cors: true
+          authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -52,6 +56,8 @@ functions:
       - http:
           method: post
           path: todos
+          cors: true
+          authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -65,6 +71,8 @@ functions:
       - http:
           method: patch
           path: todos/{todoId}
+          cors: true
+          authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -78,6 +86,8 @@ functions:
       - http:
           method: delete
           path: todos/{todoId}
+          cors: true
+          authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -94,6 +104,16 @@ functions:
 
 resources:
   Resources:
+    GatewayResponseDefault4XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+
     TodosTable:
       Type: AWS::DynamoDB::Table
       Properties:

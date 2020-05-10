@@ -18,4 +18,5 @@ export function getUserId(event: APIGatewayProxyEvent): string {
   return parseUserId(jwtToken);
 }
 
-export const addMiddleware = (handler: APIGatewayProxyHandler) => middy(handler).use(cors()).use(httpSecurityHeaders());
+export const addMiddleware = (handler: APIGatewayProxyHandler) =>
+  middy(handler).use(cors({ origin: '*', credentials: true }));
