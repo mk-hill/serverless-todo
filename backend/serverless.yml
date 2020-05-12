@@ -4,6 +4,14 @@ service:
 plugins:
   - serverless-webpack
   - serverless-iam-roles-per-function
+  - serverless-domain-manager
+
+custom:
+  customDomain:
+    domainName: todo.mk-hill.com
+    basePath: ''
+    stage: ${self:provider.stage}
+    createRoute53Record: true
 
 provider:
   name: aws
