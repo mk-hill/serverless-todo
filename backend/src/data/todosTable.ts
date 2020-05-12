@@ -96,7 +96,7 @@ async function updateAttachmentUrl(todoId: string, userId: string, attachmentUrl
       ExpressionAttributeValues: {
         ':attachmentUrl': attachmentUrl,
       },
-      ReturnValues: 'UPDATED_NEW',
+      ReturnValues: 'ALL_NEW',
     });
 
     log.info('Update complete', { result });

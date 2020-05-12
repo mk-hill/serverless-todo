@@ -163,6 +163,23 @@ functions:
         Action:
           - s3:PutObject
         Resource: arn:aws:s3:::${self:provider.environment.TODO_ITEM_ATTACHMENTS_BUCKET}/*
+      - Effect: 'Allow'
+        Action:
+          - 'xray:PutTelemetryRecords'
+        Resource: '*'
+      - Effect: 'Allow'
+        Action:
+          - 'xray:PutTraceSegments'
+        Resource: '*'
+
+  UpdateTodoWithAttachmentUrl:
+    handler: src/lambda/event/updateTodoAttachmentUrl.handler
+    events:
+      - s3:
+          bucket: ${self:provider.environment.TODO_ITEM_ATTACHMENTS_BUCKET}
+          event: s3:ObjectCreated:*
+          existing: true
+    iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:UpdateItem
