@@ -30,3 +30,16 @@ export async function generateAttachmentUrls(todoId: string, userId: string) {
     throw error;
   }
 }
+
+export async function deleteAttachment(todoId: string, userId: string) {
+  try {
+    const fileName = `${userId}/${todoId}`;
+    log.info('Deleting attachment', { userId, todoId, fileName });
+    return s3.deleteObject({
+      Bucket,
+      Key: fileName,
+    });
+  } catch (error) {
+    log.error('Unable to delete attachment');
+  }
+}

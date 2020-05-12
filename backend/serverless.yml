@@ -141,6 +141,10 @@ functions:
         Action:
           - dynamodb:DeleteItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+      - Effect: Allow
+        Action:
+          - s3:DeleteObject
+        Resource: arn:aws:s3:::${self:provider.environment.TODO_ITEM_ATTACHMENTS_BUCKET}/*
       - Effect: 'Allow'
         Action:
           - 'xray:PutTelemetryRecords'
